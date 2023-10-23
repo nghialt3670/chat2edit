@@ -5,6 +5,8 @@ convert(image: np.ndarray, category: Literal["grayscale", "negative"], target: s
 rotate(image: np.ndarray, angle: float = 90, direction: Literal["clockwise", "counter-clockwise"] = "clockwise") -> np.ndarray
 flip(image: np.ndarray, direction: Literal["horizontal", "vertical"] = "horizontal") -> np.ndarray
 zoom(image: np.ndarray, factor: float = 1.2, target: str | None = None) -> np.ndarray
+erase(image: np.ndarray, target: str | None) -> np.ndarray
+
 
 instruction: Hãy tăng độ sáng của ảnh thêm 50%
 program:
@@ -24,11 +26,9 @@ program:
 image1 = scale(image=image0, category="brightness", factor=1.2, target="foreground")
 result_image = scale(image=image1, category="blurness", factor=1.2, target="background")
 
-
 instruction: Biến cái áo thành trắng đen
 program:
 result_image = convert(image=image0, category="grayscale", target="shirt")
-
 
 instruction: {***}
 program:
