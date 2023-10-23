@@ -1,0 +1,34 @@
+Just use these available python-like functions to generate the desired program base on provided instruction:
+
+scale(image: np.ndarray, category: Literal["brightness", "contrast", "blurness", "sharpness"], factor: int | float, target: str | None = None) -> np.ndarray
+convert(image: np.ndarray, category: Literal["grayscale", "negative"], target: str | None = None) -> np.ndarray
+rotate(image: np.ndarray, angle: float = 90, direction: Literal["clockwise", "counter-clockwise"] = "clockwise") -> np.ndarray
+flip(image: np.ndarray, direction: Literal["horizontal", "vertical"] = "horizontal") -> np.ndarray
+zoom(image: np.ndarray, factor: float = 1.2, target: str | None = None) -> np.ndarray
+
+instruction: Hãy tăng độ sáng của ảnh thêm 50%
+program:
+result_image = scale(image=image0, category='brightness', factor=1.5)
+
+instruction: Giảm độ tương phản của khuôn mặt đi 35%
+program:
+result_image = scale(image=image0, category="contrast", factor=0.65, target="face")
+
+instruction: Xoay ảnh 40 độ theo chiều ngược kim đồng hồ sau đó lật ảnh theo chiều dọc
+program:
+image1 = rotate(image=image0, angle=40, direction="counter-clockwise")
+result_image = flip(image=image1, direction="vertical")
+
+instruction: Tăng độ sáng chủ thể và làm mờ nền
+program:
+image1 = scale(image=image0, category="brightness", factor=1.2, target="foreground")
+result_image = scale(image=image1, category="blurness", factor=1.2, target="background")
+
+
+instruction: Biến cái áo thành trắng đen
+program:
+result_image = convert(image=image0, category="grayscale", target="shirt")
+
+
+instruction: {***}
+program:

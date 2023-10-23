@@ -1,0 +1,7 @@
+transformers==4.34.1
+torch==2.1.0
+opencv-python==4.8.1.78
+streamlit==1.27.2
+rembg==2.0.51
+timm==0.9.8
+openai==0.28.1
