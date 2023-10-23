@@ -1,20 +1,23 @@
-A system for prompt-based image editing.
+# Chat2Edit - Prompt-Based Image Editing System
 
-Set up your OpenAI api key by:
+## Introduction
 
-In Windows:
+Chat2Edit is an innovative system that allows you to perform image editing by providing natural language prompts. With this system, you can effortlessly manipulate and enhance images by describing the changes you want, making it a powerful tool for creative professionals and image enthusiasts.
 
-`set OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>`
+## Getting Started
 
-In Linux/MacOS: 
+To get started with Chat2Edit, follow these steps:
 
-`export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>`
+```bash
+# Set Up Your OpenAI API Key
+# For Windows:
+set OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 
-Install required dependencies:
+# For Linux/MacOS:
+export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 
-`pip install -r requirements.txt`
+# Install Required Dependencies
+pip install -r requirements.txt
 
-Run streamlit demo on localhost:
-
-`streamlit run src/main.py`
-
+# Run the Streamlit Demo on Your Localhost
+streamlit run src/main.py
