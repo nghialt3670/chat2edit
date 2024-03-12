@@ -1,0 +1,47 @@
+body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background-color: rgb(3, 146, 146);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#editor {
+    margin: 10px;
+    padding: 10px;
+    width: max-content;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(42, 113, 189);
+    border-radius: 10px;
+}
+
+#canvas {
+    background-color: rgb(255, 255, 255);
+    position: relative;
+    border-radius: 10px;
+}
+
+input:focus {
+    outline: none;
+}
+
+#toolBar {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    margin: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+form {
+    margin: 10px;
+}
+

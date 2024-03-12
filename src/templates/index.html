@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat2Edit</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div id="editor">
+        <div id="toolBar">
+            <button id="uploadBtn">Upload</button>
+            <button>Download</button>
+            <button>Three</button>
+            <button>Four</button>
+            <button>Five</button>
+        </div>
+        <input type="file" id="uploadImage" accept="image/*" class="hidden">
+        <canvas id="canvas">
+        </canvas>
+        <form>
+            <input type="text" name="instruction" id="instruction">
+            <input type="button" name="editBtn" id="editBtn" value="Edit">
+        </form>
+    </div>
+    <script src="/static/index.js"></script>
+</body>
+</html>
