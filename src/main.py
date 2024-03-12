@@ -13,8 +13,9 @@ from editor.inpainting import LaMaInpainter
 from editor.segmentation import GroundingDINOSAM
 from editor.editor import Editor
 from editor.canvas import Canvas
-from editor.graphic import (
-    Graphic,
+from editor.wrapper import CanvasWrapper
+from editor.graphic2d import (
+    Graphic2D,
     BasicImage,
     ImageInpaint,
     ImageSegment,
@@ -36,12 +37,13 @@ templates = Jinja2Templates(directory="templates")
 #     model_path='./static/pretrained/big-lama.pt',
 #     device='cpu'
 # )
-# llm = OpenAILLM('')
-# editor = Editor(
-#     segmenter=segmenter, 
-#     inpainter=inpainter, 
-#     llm=llm
-# )
+llm = OpenAILLM('')
+editor = Editor(
+    segmenter=None, 
+    inpainter=None, 
+    llm=llm,
+    wrapper=CanvasWrapper(None, None, None)
+)
 
 @app.post("/upload")
 async def upload_image(requestBody: Dict):
@@ -78,35 +80,51 @@ async def edit(request: Dict):
 
     for obj in objects:
         if obj['category'] == 'basic-image':
-            properties = {new_key: obj[old_key] for new_key, old_key in mapping.items()}
+            properties = {
+                '_position': (obj['left'], obj['top']),
+                '_rotation': float(obj['angle']),
+                '_scale': (obj['scaleX'], obj['scaleY']),
+                '_flip_x': bool(obj['flipX']),
+                '_flip_y': bool(obj['flipY']),
+                '_filters': obj['filters'],
+            }
+
             data = obj['src'].split(',')[1]
             image = BasicImage.from_base64(data)
             image.set_properties(**properties)
             canvas.add(image)
 
-    #TODO: implement editor
-    # canvas.graphics[0].properties.scale_x *= 0.8
-
     new_objects = []
     old_uuids = [obj['uuid'] for obj in objects]
 
     for i, g in enumerate(canvas.graphics):
-        reversed_mapping = {v: k for k, v in mapping.items()}
-        attributes = {
-            new_key: getattr(g.properties, old_key)
-            for new_key, old_key in reversed_mapping.items()
+        properties = {
+            'left': g.position[0],
+            'top': g.position[1],
+            'angle': g.rotation,
+            'scaleX': g.scale_x,
+            'scaleY': g.scale_y,
+            'flipX': g.flip_x,
+            'flipY': g.flip_y,
+            #TODO: implement filters
         }
-        if g.properties.uuid in old_uuids:
-            objects[i].update(attributes)
+        if g.uuid in old_uuids:
+            objects[i].update(properties)
             objects[i]['new'] = 'false'
             new_objects.append(objects[i])
         else:
             new_obj = {}
             if isinstance(g, BasicImage):
-                new_obj['src'] = 'data:image/jpeg;base64,' + g.to_base64()
+                new_obj['src'] = 'data:image/jpeg;base64,' + g.base64_value()
+            #TODO: implement other categories of graphic
 
-            new_obj.update(attributes)
+            new_obj.update(properties)
             new_obj['new'] = 'true'
             new_objects.append(new_obj)
 
-    return JSONResponse(content=jsonable_encoder(new_objects))
+    response = {
+        'fewshot': editor(canvas, instruction),
+        'objects': new_objects
+    }
+
+    return JSONResponse(content=jsonable_encoder(response))

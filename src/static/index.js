@@ -65,7 +65,9 @@ editBtn.onclick = async (e) => {
     }
 
     const response = await fetch(endpoint, request);
-    const new_objects = await response.json()
+    const data = await response.json();
+    const new_objects = data['new_objects']
+    console.log(data['fewshot'])
 
     fabric.util.enlivenObjects(new_objects, (objects) => {
         canvas.renderOnAddRemove = false;
@@ -77,7 +79,7 @@ editBtn.onclick = async (e) => {
       
         canvas.renderOnAddRemove = true;
         canvas.renderAll();
-      });
+    });
 }
 
 

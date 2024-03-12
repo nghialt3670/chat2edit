@@ -1,51 +1,46 @@
 from typing import Tuple, List, Optional, Dict
 from abc import ABC, abstractmethod
 
-from .graphic import Graphic
+from .graphic2d import Graphic2D
 
 
 class Canvas:
     def __init__(
         self,
-        graphics: Optional[List[Graphic]] = None
+        graphics: Optional[List[Graphic2D]] = None
     ) -> None:
-        self.graphics = graphics if graphics is not None else []
+        self._graphics = graphics if graphics is not None else []
 
-    def add(self, g: Graphic) -> None:
-        self.graphics.append(g)
+    @property
+    def graphics(self) -> List[Graphic2D]:
+        return self._graphics.copy()
 
-    def remove(self, g: Graphic) -> None:
-        self.graphics.remove(g)
+    def add(self, g: Graphic2D) -> None:
+        self._graphics.append(g)
 
-    def get_graphic_by_label(
-        self, 
-        label: str
-    ) -> List[Graphic]:
+    def insert(self, i: int, g: Graphic2D) -> None:
+        self._graphics.insert(i, g)
+
+    def remove(self, g: Graphic2D) -> None:
+        self._graphics.remove(g)
+
+    def set_graphic(self, i: int, g: Graphic2D) -> None:
+        self._graphics[i] = g
+
+    def get_graphics_by_label(self, label: str) -> List[Graphic2D]:
         return [
-            g for g in self.graphics 
+            g for g in self._graphics 
             if hasattr(g, 'labels') and label in g.labels
         ]
     
-    def get_graphic_by_uuid(
-        self,
-        uuid: str
-    ) -> Optional[Graphic]:
-        for g in self.graphics:
-            if g.properties.uuid == uuid:
+    def get_graphic_by_uuid(self, uuid: str) -> Optional[Graphic2D]:
+        for g in self._graphics:
+            if g.uuid == uuid:
                 return g
         
         return None
     
-    def index_of(
-        self,
-        graphic: Graphic
-    ) -> int:
-        return self.graphics.index(graphic) 
-            
-    def set_graphic(
-        self, 
-        index: int,
-        graphic: Graphic
-    ) -> None:
-        self.graphics[index] = graphic
+    def index_of(self, graphic: Graphic2D) -> int:
+        return self._graphics.index(graphic) 
+        
         
