@@ -11,19 +11,27 @@
     <div id="editor">
         <div id="toolBar">
             <button id="uploadBtn">Upload</button>
-            <button>Download</button>
-            <button>Three</button>
-            <button>Four</button>
-            <button>Five</button>
+            <button id="addBtn">Add</button>
+            <label for="canvasSize">Canvas Size:</label>
+            <select id="canvasSize">
+                <option value="fit">Fit</option>
+                <option value="1:1">1:1</option>
+                <option value="3:4">3:4</option>
+                <!-- Add more options as needed -->
+            </select>
+            <form>
+                <label for="instruction">Instruction:</label>
+                <input type="text" name="instruction" id="instruction">
+                <input type="button" name="editBtn" id="editBtn" value="Edit">
+            </form>
         </div>
-        <input type="file" id="uploadImage" accept="image/*" class="hidden">
+        <input type="file" id="uploadedImage" accept="image/*" class="hidden">
+        <input type="file" id="addedImage" accept="image/*" class="hidden">
         <canvas id="canvas">
         </canvas>
-        <form>
-            <input type="text" name="instruction" id="instruction">
-            <input type="button" name="editBtn" id="editBtn" value="Edit">
-        </form>
+        
     </div>
     <script src="/static/index.js"></script>
+    <script src="/static/edit.js"></script>
 </body>
 </html>

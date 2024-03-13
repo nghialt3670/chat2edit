@@ -68,11 +68,7 @@ def nms(
     )
 
 
-def compare_images(
-    image1, 
-    image2, 
-    hash_size=8
-) -> bool:
+def compare_images(image1, image2, hash_size=8) -> bool:
     hash1 = imagehash.phash(image1, hash_size=hash_size)
     hash2 = imagehash.phash(image2, hash_size=hash_size)
     return hash1 == hash2
@@ -86,8 +82,7 @@ def random_color_rgb():
 
 
 def iou(
-    box1: Tuple[int, int, int, int], 
-    box2: Tuple[int, int, int, int],
+    box1: Tuple[int, int, int, int], box2: Tuple[int, int, int, int]
 ) -> float:
     x1 = max(box1[0], box2[0])
     y1 = max(box1[1], box2[1])
@@ -123,10 +118,7 @@ def post_process_mask(mask: np.ndarray) -> np.ndarray:
     return mask
 
 
-def expand_mask(
-    mask: np.ndarray, 
-    iterations: int
-) -> np.ndarray:
+def expand_mask(mask: np.ndarray, iterations: int) -> np.ndarray:
     kernel = np.ones((3,3), np.uint8)
     dilated_mask = cv2.dilate(mask, kernel, iterations=iterations)
     return dilated_mask
@@ -143,3 +135,11 @@ def base64_decode(data: str) -> Image.Image:
     image_bytes = base64.b64decode(data)
     image_stream = BytesIO(image_bytes)
     return Image.open(image_stream)
+
+
+def cut_image_from_mask(image: Image.Image, mask: np.ndarray) -> Image.Image:
+    box = Image.fromarray(mask).getbbox()
+    xmin, ymin, xmax, ymax = box
+    cut_image = Image.new('RGBA', (xmax - xmin, ymax - ymin))
+    cut_image.paste(image.crop(box), (0, 0), Image.fromarray(mask))
+    return cut_image

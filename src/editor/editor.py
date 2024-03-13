@@ -6,7 +6,7 @@ from .segmentation import ZeroShotSegmenter
 from .inpainting import ImageInpainter
 from .llm import LLM
 from .canvas import Canvas
-from .graphic2d import Graphic2D
+from .models import Graphic2D
 from .wrapper import CanvasWrapper
 
 class Editor:
@@ -35,14 +35,11 @@ class Editor:
             'Entity': 'Graphic2D',
         }
         function = self._replace(function, mappings)
-
         exec(function, globals())
-        # return process_image(canvas)
         return canvas
     
     def _get_function_string(self, text: str) -> str:
-        return text[text.find('def'):text.find('```')]
-
+        return text[text.find('def'):text.find('```') + 1]
     
     def _create_prompt(self, instruction: str) -> str:
         class_type = self.wrapper.__class__

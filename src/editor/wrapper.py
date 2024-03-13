@@ -1,9 +1,9 @@
 import numpy as np
-
 from typing import Literal, Optional, List
+from PIL import Image
 
 from .canvas import Canvas
-from .graphic2d import Graphic2D, ImageSegment, ImageInpaint
+from .models import Graphic2D, ImageSegment, ImageInpaint
 from .segmentation import ZeroShotSegmenter
 from .inpainting import ImageInpainter
 
@@ -24,9 +24,8 @@ class CanvasWrapper:
         if len(graphics) != 0:
             return graphics
     
-        return ImageSegment.from_segmenter(
-            self.canvas.graphics[0], [prompt], self.segmenter
-        )
+        target_image = self.canvas.graphics[0].image
+        return ImageSegment.from_segmenter(target_image, [prompt])
         
     def remove(self, targets: List[Graphic2D]) -> None:
         masks = [
@@ -34,12 +33,13 @@ class CanvasWrapper:
             if isinstance(tar, ImageSegment) and not tar.inpainted
         ]
         combined_mask = np.maximum.reduce(masks)
+        target_image = self.canvas.graphics[0].image
         inpaiting = ImageInpaint.from_inpainter(
-            self.canvas.graphics[0].value, combined_mask, self.inpainter
+            target_image, combined_mask, self.inpainter
         )
         self.canvas.insert(1, inpaiting)
-        for g in targets:
-            self.canvas.remove(g)
+        for tar in targets:
+            self.canvas.remove(tar)
 
     def insert(self, entities: List[Graphic2D]) -> None:
         for g in entities:

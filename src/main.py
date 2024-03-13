@@ -1,9 +1,9 @@
-from fastapi import FastAPI, Request, UploadFile, File
+from fastapi import FastAPI, Request, Body
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from typing import Dict
+from typing import Dict, List, Union
 
 from PIL import Image
 from io import BytesIO
@@ -14,18 +14,21 @@ from editor.segmentation import GroundingDINOSAM
 from editor.editor import Editor
 from editor.canvas import Canvas
 from editor.wrapper import CanvasWrapper
-from editor.graphic2d import (
+from editor.models import (
     Graphic2D,
-    BasicImage,
+    BaseImage,
+    TargetImage,
     ImageInpaint,
     ImageSegment,
     Text
 )
 
+
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
 
 # segmenter = GroundingDINOSAM(
 #     gd_model_path='./static/pretrained/groundingdino_swint_ogc.pth',
@@ -45,14 +48,6 @@ editor = Editor(
     wrapper=CanvasWrapper(None, None, None)
 )
 
-@app.post("/upload")
-async def upload_image(requestBody: Dict):
-    image_data = requestBody['data'].split(',')[1]
-    image = base64_decode(image_data)
-    basic_image = BasicImage(image)
-    json_image = jsonable_encoder(basic_image.to_dict())
-    return JSONResponse(content=json_image)
-
 
 @app.get("/")
 def read_root(request: Request):
@@ -62,69 +57,16 @@ def read_root(request: Request):
 
 
 @app.post("/edit")
-async def edit(request: Dict):
-    mapping = {
-        'uuid': 'uuid',
-        'pos_x': 'left',
-        'pos_y': 'top',
-        'angle': 'angle',
-        'scale_x': 'scaleX',
-        'scale_y': 'scaleY',
-        'flip_x': 'flipX',
-        'flip_y': 'flipY',
-    }
-    objects = request['objects']
-    instruction = request['instruction']
-
-    canvas = Canvas()
-
-    for obj in objects:
-        if obj['category'] == 'basic-image':
-            properties = {
-                '_position': (obj['left'], obj['top']),
-                '_rotation': float(obj['angle']),
-                '_scale': (obj['scaleX'], obj['scaleY']),
-                '_flip_x': bool(obj['flipX']),
-                '_flip_y': bool(obj['flipY']),
-                '_filters': obj['filters'],
-            }
-
-            data = obj['src'].split(',')[1]
-            image = BasicImage.from_base64(data)
-            image.set_properties(**properties)
-            canvas.add(image)
-
-    new_objects = []
-    old_uuids = [obj['uuid'] for obj in objects]
-
-    for i, g in enumerate(canvas.graphics):
-        properties = {
-            'left': g.position[0],
-            'top': g.position[1],
-            'angle': g.rotation,
-            'scaleX': g.scale_x,
-            'scaleY': g.scale_y,
-            'flipX': g.flip_x,
-            'flipY': g.flip_y,
-            #TODO: implement filters
-        }
-        if g.uuid in old_uuids:
-            objects[i].update(properties)
-            objects[i]['new'] = 'false'
-            new_objects.append(objects[i])
-        else:
-            new_obj = {}
-            if isinstance(g, BasicImage):
-                new_obj['src'] = 'data:image/jpeg;base64,' + g.base64_value()
-            #TODO: implement other categories of graphic
-
-            new_obj.update(properties)
-            new_obj['new'] = 'true'
-            new_objects.append(new_obj)
-
+async def edit(
+    instruction: str,
+    graphics: List[Union[BaseImage, ImageInpaint, ImageSegment, Text, TargetImage]] = Body(...)
+) -> JSONResponse:
+    canvas = Canvas(graphics)
+    canvas = editor(canvas, instruction)
     response = {
-        'fewshot': editor(canvas, instruction),
-        'objects': new_objects
+        'graphics': canvas.graphics
     }
 
     return JSONResponse(content=jsonable_encoder(response))
+
+

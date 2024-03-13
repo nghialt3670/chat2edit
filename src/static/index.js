@@ -1,36 +1,65 @@
-var canvas = new fabric.Canvas('canvas');
-canvas.setHeight(600); 
-canvas.setWidth(800);
-
-
-const uploadImage = document.getElementById('uploadImage');
+const canvas = new fabric.Canvas('canvas');
+const uploadedImage = document.getElementById('uploadedImage');
+const addedImage = document.getElementById('addedImage');
 const uploadBtn = document.getElementById('uploadBtn');
-const editBtn = document.getElementById('editBtn');
+const addBtn = document.getElementById('addBtn')
+const canvasSize = document.getElementById('canvasSize');
+const maxHeight = 600;
+const maxWidth = 1000;
+canvas.setHeight(maxHeight);
+canvas.setWidth(maxWidth);
+canvas.set({
+    fitWith: maxWidth,
+    fitHeight: maxHeight
+})
 
 
 uploadBtn.onclick = (e) => {
-    uploadImage.click();
+    uploadedImage.click();
 } 
 
+addBtn.onclick = (e) => {
+    addedImage.click();
+}
 
-uploadImage.onchange =  async (e) => {
+
+canvasSize.onchange = (e) => {
+    const selectedOption = canvasSize.value;
+    if (selectedOption === 'fit') {
+        canvas.setWidth(canvas.fitWith);
+        canvas.setHeight(canvas.fitHeight);
+    } else {
+        const ratioParts = selectedOption.split(':');
+        const ratioWidth = parseInt(ratioParts[0]);
+        const ratioHeight = parseInt(ratioParts[1]);
+        width = ratioWidth / ratioHeight * maxHeight;
+        canvas.setWidth(width);
+    }
+}
+
+
+uploadedImage.onchange =  async (e) => {
     const file = e.target.files[0];
     
     if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = (e) => {
             fabric.Image.fromURL(e.target.result, async (img) => {
-                const scaleFactor = canvas.height / img.height;
+                const scale = maxHeight / img.height;
                 img.set({
                     uuid: uuidv4(),
-                    category: 'basic-image',
-                    scaleX: scaleFactor,
-                    scaleY: scaleFactor,
+                    category: 'target-image',
                     selectable: false,
-                    hoverCursor: "mouse"
+                    scaleX: scale,
+                    scaleY: scale,
+                    hoverCursor: "mouse",
+                    members: []
                 });
-
-                canvas.setWidth(img.width * scaleFactor); 
+                canvas.setWidth(maxHeight * (img.width / img.height));
+                canvas.set({
+                    fitWith: canvas.width,
+                    fitHeight: canvas.height
+                })
                 canvas.clear();
                 canvas.add(img);
             });
@@ -40,47 +69,45 @@ uploadImage.onchange =  async (e) => {
 };
 
 
-editBtn.onclick = async (e) => {
-    const instruction = document.getElementById('instruction');
-    const endpoint = '/edit';
+addedImage.onchange =  async (e) => {
+    const file = e.target.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            fabric.Image.fromURL(e.target.result, async (img) => {
+                const scale = maxHeight / img.height * 0.7;
 
-    if (instruction.value.trim() == '') {
-        alert('Please give your instruction to edit the image')
-        return
+                img.set({
+                    uuid: uuidv4(),
+                    category: 'basic-image',
+                    scaleX: scale,
+                    scaleY: scale,
+                });
+                canvas.add(img);
+            });
+        };
+        reader.readAsDataURL(file);
     }
+};
 
-    objects = canvas.getObjects().map(
-        obj => obj.toJSON(['uuid', 'category'])
-    );
 
-    requestBody = JSON.stringify({
-        'objects': objects,
-        'instruction': instruction.value 
-    });
-
-    request = {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: requestBody,
-    }
-
-    const response = await fetch(endpoint, request);
-    const data = await response.json();
-    const new_objects = data['new_objects']
-    console.log(data['fewshot'])
-
-    fabric.util.enlivenObjects(new_objects, (objects) => {
-        canvas.renderOnAddRemove = false;
-        canvas.clear();
-
-        objects.forEach((obj) => {
-            canvas.add(obj);
-        });
-      
-        canvas.renderOnAddRemove = true;
+function deleteActiveObject() {
+    var activeObject = canvas.getActiveObject();
+    if (activeObject) {
+        canvas.remove(activeObject);
         canvas.renderAll();
-    });
+    }
 }
+
+window.onkeydown = (e) => {
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        deleteActiveObject();
+    }
+}
+
+
+
 
 
 function uuidv4() {
