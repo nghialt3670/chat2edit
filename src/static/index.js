@@ -4,8 +4,15 @@ const addedImage = document.getElementById('addedImage');
 const uploadBtn = document.getElementById('uploadBtn');
 const addBtn = document.getElementById('addBtn')
 const canvasSize = document.getElementById('canvasSize');
+const containerHeight = 600;
+const containerWidth = 1000;
 const maxHeight = 600;
 const maxWidth = 1000;
+
+const scaleRatio = Math.min(containerWidth/maxWidth, containerHeight/maxHeight);
+canvas.setDimensions({ width: canvas.getWidth() * scaleRatio, height: canvas.getHeight() * scaleRatio });
+canvas.setZoom(scaleRatio)
+
 canvas.setHeight(maxHeight);
 canvas.setWidth(maxWidth);
 canvas.set({
@@ -47,19 +54,18 @@ uploadedImage.onchange =  async (e) => {
             fabric.Image.fromURL(e.target.result, async (img) => {
                 const scale = maxHeight / img.height;
                 img.set({
+                    labels: [],
                     uuid: uuidv4(),
-                    category: 'target-image',
+                    category: 'base-image',
                     selectable: false,
-                    scaleX: scale,
-                    scaleY: scale,
                     hoverCursor: "mouse",
-                    members: []
                 });
                 canvas.setWidth(maxHeight * (img.width / img.height));
                 canvas.set({
                     fitWith: canvas.width,
                     fitHeight: canvas.height
                 })
+                canvas.setZoom(canvas.height/img.height)
                 canvas.clear();
                 canvas.add(img);
             });
@@ -79,10 +85,9 @@ addedImage.onchange =  async (e) => {
                 const scale = maxHeight / img.height * 0.7;
 
                 img.set({
+                    labels: [],
                     uuid: uuidv4(),
-                    category: 'basic-image',
-                    scaleX: scale,
-                    scaleY: scale,
+                    category: 'base-image',
                 });
                 canvas.add(img);
             });
@@ -107,11 +112,3 @@ window.onkeydown = (e) => {
 }
 
 
-
-
-
-function uuidv4() {
-    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-    );
-}

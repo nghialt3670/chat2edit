@@ -6,9 +6,7 @@ import base64
 
 from io import BytesIO
 from PIL import Image
-from typing import Sequence, List, Tuple, Dict
-from scipy.ndimage import shift
-from imutils import rotate
+from typing import Sequence, List, Tuple
 from cv2 import (
     BORDER_DEFAULT,
     MORPH_ELLIPSE,
@@ -119,6 +117,7 @@ def post_process_mask(mask: np.ndarray) -> np.ndarray:
 
 
 def expand_mask(mask: np.ndarray, iterations: int) -> np.ndarray:
+    mask = mask.astype(np.uint8)
     kernel = np.ones((3,3), np.uint8)
     dilated_mask = cv2.dilate(mask, kernel, iterations=iterations)
     return dilated_mask
@@ -134,12 +133,28 @@ def base64_encode(image: Image.Image) -> str:
 def base64_decode(data: str) -> Image.Image:
     image_bytes = base64.b64decode(data)
     image_stream = BytesIO(image_bytes)
-    return Image.open(image_stream)
+    return Image.open(image_stream).convert('RGBA')
 
 
 def cut_image_from_mask(image: Image.Image, mask: np.ndarray) -> Image.Image:
-    box = Image.fromarray(mask).getbbox()
+    mask = Image.fromarray(mask)
+    box = mask.getbbox()
     xmin, ymin, xmax, ymax = box
     cut_image = Image.new('RGBA', (xmax - xmin, ymax - ymin))
-    cut_image.paste(image.crop(box), (0, 0), Image.fromarray(mask))
+    cut_image.paste(image.crop(box), (0, 0), mask.crop(box))
     return cut_image
+
+
+def get_full_mask(mask: np.ndarray, size: Tuple[int, int], offsets: Tuple[int, int]) -> np.ndarray:
+    # Create a new empty image of given size
+    full_mask = np.zeros(size, dtype=np.uint8)
+    
+    # Calculate the position to paste the mask using offsets
+    x_offset, y_offset= offsets
+    y_end = min(y_offset + mask.shape[0], size[0])
+    x_end = min(x_offset + mask.shape[1], size[1])
+    
+    # Paste the mask onto the full mask image at the calculated position
+    full_mask[y_offset:y_end, x_offset:x_end] = mask[:y_end-y_offset, :x_end-x_offset]
+    
+    return full_mask

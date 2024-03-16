@@ -6,46 +6,42 @@ from .segmentation import ZeroShotSegmenter
 from .inpainting import ImageInpainter
 from .llm import LLM
 from .canvas import Canvas
-from .models import Graphic2D
-from .wrapper import CanvasWrapper
 
 class Editor:
     def __init__(
         self,
-        segmenter: ZeroShotSegmenter,
-        inpainter: ImageInpainter,
         llm: LLM,
-        wrapper: CanvasWrapper,
     ) -> None:
-        self.segmenter = segmenter
-        self.inpainter = inpainter
         self.llm = llm
-        self.wrapper = wrapper
 
     def __call__(
         self, 
         canvas: Canvas,
         instruction: str
     ) -> Canvas:
-        prompt = self._create_prompt(instruction)
+        prompt = self._create_prompt(instruction, canvas.__class__)
+        print(prompt)
         program = self.llm(prompt)
         function = self._get_function_string(program)
         mappings = {
-            'Image': 'CanvasWrapper',
+            'Image': 'Canvas',
             'Entity': 'Graphic2D',
         }
         function = self._replace(function, mappings)
+        print(function)
         exec(function, globals())
-        return canvas
+        return process_image(canvas)
     
     def _get_function_string(self, text: str) -> str:
-        return text[text.find('def'):text.find('```') + 1]
+        if '```' in text:
+            return text[text.find('def'):text.rfind('```')]
+        else:
+            return text
     
-    def _create_prompt(self, instruction: str) -> str:
-        class_type = self.wrapper.__class__
+    def _create_prompt(self, instruction: str, class_obj) -> str:
         prompt = 'Suppose you have this implemeted class:\n'
-        prompt += f'class {class_type.__name__}:\n' 
-        for declaration in self._get_function_declarations(class_type):
+        prompt += f'class {class_obj.__name__}:\n' 
+        for declaration in self._get_function_declarations(class_obj):
             prompt += f'\t{declaration}\n'
 
         prompt += f'\nImplement the function below to satisfy the instruction: {instruction}\n'
@@ -53,7 +49,7 @@ class Editor:
         prompt += '\ndef process_image(image: Image) -> Image:\n'
         prompt += '\t# Your implementation\n'
         mappings = {
-            'CanvasWrapper': 'Image',
+            'Canvas': 'Image',
             'Graphic2D': 'Entity',
             'ImageSegment': 'Entity'
         }

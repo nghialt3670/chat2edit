@@ -11,27 +11,37 @@ editBtn.onclick = async (e) => {
     }
 
     const graphics = canvas.getObjects().map((obj) => {
-        obj = obj.toJSON(['uuid', 'category']);
-        if (obj.category == 'target-image') {
+        obj = obj.toJSON(['labels', 'uuid', 'category']);
+        let graphicAttributes = {
+            labels: obj.labels,
+            uuid: obj.uuid,
+            category: obj.category,
+            pos_x: obj.left,
+            pos_y: obj.top,
+            angle: obj.angle,
+            scale_x: obj.scaleX,
+            scale_y: obj.scaleY,
+            flip_x: obj.flipX,
+            flip_y: obj.flipY,
+            filters: obj.filters,
+        }
+        if (obj.category == 'base-image') {
             return {
-                uuid: obj.uuid,
-                category: obj.category,
-                pos_x: obj.left,
-                pos_y: obj.top,
-                angle: obj.angle,
-                scale_x: obj.scaleX,
-                scale_y: obj.scaleY,
-                filters: obj.filters,
-                base64_str: obj.src,
-                members: obj.members
+                ...graphicAttributes,
+                base64_str: toBase64Str(obj.src),
             }
-        } else {
-
+        } else if (obj.category == 'image-segment') {
+            return {
+                ...graphicAttributes,
+                base64_str: toBase64Str(obj.src),
+                score: obj.score,
+                inpainted: obj.inpainted,
+            }
         }
     });
 
     requestBody = JSON.stringify(graphics);
-    console.log(requestBody)
+
     request = {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -43,36 +53,63 @@ editBtn.onclick = async (e) => {
 
     const response = await fetch(parameterized_endpoint, request);
     const data = await response.json();
-    const new_graphics = data['graphics'];
-    const old_objects = canvas.toJSON().objects;
-    const new_objects = new_graphics.map((graphic) => {
-        if (graphic.category === 'target-image') {
-            obj_attributes = {
-                uuid: graphic.uuid,
-                category: graphic.category,
-                left: graphic.pos_x,
-                top: graphic.pos_y,
-                angle: graphic.angle,
-                scaleX: graphic.scale_x,
-                scaleY: graphic.scale_y,
-                filters: graphic.filters,
-                src: graphic.base64_str,
-                members: graphic.members
+    const newGraphics = data['graphics'];
+    const oldObjects = canvas.getObjects().map((obj) => obj.toJSON(['uuid', 'category']));
+    const newObjects = newGraphics.map((graphic) => {
+        let attributes = {
+            labels: graphic.labels,
+            uuid: graphic.uuid,
+            category: graphic.category,
+            left: graphic.pos_x,
+            top: graphic.pos_y,
+            angle: graphic.angle,
+            scaleX: graphic.scale_x,
+            scaleY: graphic.scale_y,
+            flipX: graphic.flip_x,
+            flipY: graphic.flip_y,
+            filters: graphic.filters,
+        }
+        if (graphic.category === 'base-image') {
+            attributes = {
+                ...attributes, 
+                src: toBase64Url(graphic.base64_str),
+                selectable: false,
+                hoverCursor: "mouse"
             }
-            const idx = old_objects.findIndex((obj) => (obj.uuid == graphic.uud));
-            return { ...old_objects[idx], ...obj_attributes }
+        } else if (graphic.category === 'image-segment') {
+            attributes = {
+                ...attributes,
+                src: toBase64Url(graphic.base64_str),
+                score: graphic.score,
+                inpainted: graphic.inpainted
+            }
+        }
+        const idx = oldObjects.findIndex((obj) => {
+            return obj.uuid === graphic.uuid
+        });
+        if (idx != -1) {
+            return { ...oldObjects[idx], ...attributes, };
+        } else {
+            const image = new fabric.Image('');
+            return { ...image.toJSON(), ...attributes };          
         }
     });
 
-    fabric.util.enlivenObjects(new_objects, (objects) => {
+    // console.log(newObjects)
+    // console.log(oldObjects)
+
+    fabric.util.enlivenObjects(newObjects, function(objects) {
         canvas.renderOnAddRemove = false;
         canvas.clear();
 
-        objects.forEach((obj) => {
-            canvas.add(obj);
+        console.log(objects)
+        objects.forEach((o, i) => {
+            canvas.insertAt(o, i);
         });
       
         canvas.renderOnAddRemove = true;
         canvas.renderAll();
     });
 }
+
+
