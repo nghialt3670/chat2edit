@@ -1,6 +1,7 @@
+import copy
 import numpy as np
 from pydantic import BaseModel
-from typing import List, Union, Set, Optional
+from typing import List, Union, Set, Optional, Any, Dict, Tuple, Literal
 from uuid import uuid4
 from PIL import Image
 
@@ -30,11 +31,62 @@ class Graphic2D(BaseModel):
     flip_y: bool = False
     filters: List[Filter] = []
 
+    @property
+    def position(self) -> Tuple[int, int]:
+        return (self.pos_x, self.pos_y)
+    
+    @position.setter
+    def position(self, dest: Tuple[int, int]) -> 'Graphic2D':
+        self.pos_x = dest[0]
+        self.pos_y = dest[1]
+        return self
+
+    def shift(self, offsets: Tuple[int, int]) -> 'Graphic2D':
+        self.pos_x += offsets[0]
+        self.pos_y += offsets[1]
+        return self
+
+    def rotate(self, angle: float) -> 'Graphic2D':
+        self.angle += angle
+
+    def flip_horizontal(self) -> 'Graphic2D':
+        self.flip_x = not self.flip_x
+        return self
+
+    def flip_vertical(self) -> 'Graphic2D':
+        self.flip_y = not self.flip_y
+        return self
+    
+    def flip(self, axis: Literal['x', 'y']) -> 'Graphic2D':
+        if axis == 'x':
+            return self.flip_horizontal()
+        if axis == 'y':
+            return self.flip_vertical()
+            
+    def scale_horizontal(self, factor: float) -> 'Graphic2D':
+        self.scale_x *= factor
+        return self
+    
+    def scale_vertical(self, factor: float) -> 'Graphic2D':
+        self.scale_y *= factor
+
+    def scale(self, factors: Tuple[float, float]) -> 'Graphic2D':
+        return self.scale_horizontal(factors[0]).scale_vertical(factors[1])
+
+    def apply(self, f: Filter) -> 'Graphic2D':
+        self.filters.append(f)
+
+    def label(self, label: str) -> 'Graphic2D':
+        self.labels.add(label)
+
     def __eq__(self, g: 'Graphic2D') -> bool:
         return g.__class__ == self.__class__ and g.uuid == self.uuid
     
     def __repr__(self) -> str:
         return str(self.__class__)
+    
+    def __hash__(self) -> int:
+        return hash(self.uuid)
 
 
 class BaseImage(Graphic2D):
@@ -47,6 +99,11 @@ class BaseImage(Graphic2D):
 
         return self._image
     
+    @image.setter
+    def image(self, image: Image.Image) -> None:
+        self._image = image
+        self.base64_str = base64_encode(image)
+    
     @property
     def base64_str(self) -> str:
         return self.__dict__['base64_str']
@@ -56,31 +113,14 @@ class BaseImage(Graphic2D):
         self.__dict__['base64_str'] = base64_str
         self._image = base64_decode(base64_str)
     
-    @image.setter
-    def image(self, image: Image.Image) -> None:
-        self._image = image
-        self.base64_str = base64_encode(image)
-    
     def get_mask(self) -> np.ndarray:
         alpha_channel = self.image.split()[-1]
         mask = np.asarray(alpha_channel) 
         mask = np.where(mask == 0, 0, 255) 
         return mask
-    
-    def remove(
-        self, mask: np.ndarray,
-        inpainter: Optional[ImageInpainter] =  None
-    ) -> None:
-        if inpainter is not None:
-            self.image = inpainter(self.image, mask)    
 
-        inverted_mask = 255 - mask
-        self.image.paste(
-            Image.fromarray(inverted_mask), 
-            (0, 0), Image.fromarray(mask)
-        )
-
-    def segment(self, labels: List[str], 
+    def segment(
+        self, labels: List[str], 
         segmenter: ZeroShotSegmenter
     ) -> List['ImageSegment']:
         entities = segmenter(self.image, labels)
@@ -93,17 +133,23 @@ class BaseImage(Graphic2D):
                 score=e.score,
                 inpainted=False,
                 base64_str='',
-                pos_x=xmin,
-                pos_y=ymin,
             )
+            segment.position = (xmin, ymin)
             segment.image = cut_image_from_mask(self.image, e.mask)
             segments.append(segment)
 
         return segments
+    
+    def __deepcopy__(
+        self, memo: Optional[Dict[int, Any]] = None
+    ) -> 'BaseImage':
+        segment = copy.deepcopy(self)
+        segment.image = self.image.copy()
+        return segment
 
 
 class ImageSegment(BaseImage):
-    score: float
+    score: float    
     inpainted: bool
 
 
@@ -113,5 +159,6 @@ class Text(Graphic2D):
     font_size: str
     font_style: str
     font_weight: Union[str, int]
+
 
 

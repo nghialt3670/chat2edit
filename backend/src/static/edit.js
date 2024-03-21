@@ -2,6 +2,7 @@ const editBtn = document.getElementById('editBtn');
 
 
 editBtn.onclick = async (e) => {
+    e.preventDefault();
     const instruction = document.getElementById('instruction');
     const endpoint = '/edit';
 
@@ -39,6 +40,8 @@ editBtn.onclick = async (e) => {
             }
         }
     });
+
+    console.log(graphics)
 
     requestBody = JSON.stringify(graphics);
 
@@ -81,7 +84,7 @@ editBtn.onclick = async (e) => {
                 ...attributes,
                 src: toBase64Url(graphic.base64_str),
                 score: graphic.score,
-                inpainted: graphic.inpainted
+                inpainted: graphic.inpainted,
             }
         }
         const idx = oldObjects.findIndex((obj) => {
@@ -102,7 +105,6 @@ editBtn.onclick = async (e) => {
         canvas.renderOnAddRemove = false;
         canvas.clear();
 
-        console.log(objects)
         objects.forEach((o, i) => {
             canvas.insertAt(o, i);
         });

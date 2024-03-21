@@ -146,15 +146,13 @@ def cut_image_from_mask(image: Image.Image, mask: np.ndarray) -> Image.Image:
 
 
 def get_full_mask(mask: np.ndarray, size: Tuple[int, int], offsets: Tuple[int, int]) -> np.ndarray:
-    # Create a new empty image of given size
-    full_mask = np.zeros(size, dtype=np.uint8)
-    
-    # Calculate the position to paste the mask using offsets
+    full_mask = np.zeros(size[::-1], dtype=np.uint8)
     x_offset, y_offset= offsets
-    y_end = min(y_offset + mask.shape[0], size[0])
-    x_end = min(x_offset + mask.shape[1], size[1])
-    
-    # Paste the mask onto the full mask image at the calculated position
+    x_end = min(x_offset + mask.shape[1], size[0])
+    y_end = min(y_offset + mask.shape[0], size[1])
     full_mask[y_offset:y_end, x_offset:x_end] = mask[:y_end-y_offset, :x_end-x_offset]
-    
+    mask = mask.astype(np.uint8)
+    full_mask = full_mask.astype(np.uint8)
+    Image.fromarray(mask).save('mask.png')
+    Image.fromarray(full_mask).save('full_mask.png')
     return full_mask

@@ -1,0 +1,140 @@
+::-webkit-scrollbar {
+    display: none; /* This will hide the scrollbar */
+}
+
+html, body {
+	height: 100%;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+input:focus {
+	outline: none;
+}
+
+input[type='button'] {
+	cursor: pointer;
+}
+
+#root {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	width: 100%;
+}
+
+#chat-box {
+    position: relative;
+    width: clamp(900px, 90%, 1200px);
+    height: 90%;
+    background-color: #91b6c8;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); /* This adds a shadow effect */
+}
+
+#msg-area {
+	position: absolute;
+	top: 0;
+	width: calc(100% - 20px);
+	height: 90%;
+	margin: 10px;
+	overflow-y: scroll;
+	scroll-behavior: smooth;
+	display: flex;
+	flex-direction: column-reverse;
+}
+
+#chat-form {
+	display: block;
+	position: absolute;
+	bottom: 0;
+	width: calc(100% - 20px);
+	margin: 10px;
+}
+
+#img-preview {
+	display: flex;
+	flex-direction: row;
+	width: fit-content;
+	margin: 10px;
+	float: right;
+}
+
+#img-preview img{
+	margin: 5px;
+	width: 100px;
+	opacity: 0.8;
+}
+
+#input-area {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 6%;
+    background-color: #adcbe5;
+	border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2); /* This adds a shadow effect */ 	 	
+}
+
+#upload-img-btn, #ins-input, #send-msg-btn {
+	border-radius: 10px;
+	border: none;
+	background-color: #69a1c4;
+}
+
+#upload-img-btn, #send-msg-btn {
+	margin: 10px;
+	height: 40px;
+	width: 60px;
+}
+
+#ins-input {
+	height: 40px;
+}
+
+#ins-input {
+	font-size: large;
+	width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.msg {
+	margin: 10px 0px;
+}
+
+.msg-content img{
+	width: 600px;
+	margin: 10px;
+	border-radius: 10px;
+}
+
+.msg-content p {
+	margin: 0px 10px 10px 10px;
+	font-size: larger;
+	margin: 10px;
+	height: fit-content;
+	width: fit-content;
+	display: flex;
+	flex-direction: column;
+}
+
+.msg-content {
+	background-color: rgba(73, 19, 130, 0.256);
+	display: grid;
+}
+
+.left-msg .msg-content{
+	float: left;
+	left: 0px;
+	border-radius: 0px 15px 15px 15px;
+}
+
+.right-msg .msg-content{
+	float: right;
+	right: 0px;
+	border-radius: 15px 0px 15px 15px;
+}
+

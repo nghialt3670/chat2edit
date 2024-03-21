@@ -10,7 +10,7 @@ from editor.inpainting import LaMaInpainter
 from editor.segmentation import GroundingDINOSAM
 from editor.editor import Editor
 from editor.canvas import Canvas
-from editor.models import (
+from editor.graphic2d import (
     BaseImage,
     ImageSegment,
     Text
@@ -44,7 +44,7 @@ editor = Editor(
 @app.get("/")
 def read_root(request: Request):
     return templates.TemplateResponse(
-        "index.html", {"request": request,}
+        "chat.html", {"request": request}
     )
 
 
@@ -53,7 +53,6 @@ async def edit(
     instruction: str,
     graphics: List[Union[BaseImage, ImageSegment, Text]] = Body(...)
 ) -> JSONResponse:
-    print(len(graphics))
     canvas = Canvas(graphics, segmenter, inpainter)
     edited_canvas = editor(canvas, instruction)
     response = {
@@ -63,5 +62,6 @@ async def edit(
     return JSONResponse(content=jsonable_encoder(response))
 
 
-
-
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)

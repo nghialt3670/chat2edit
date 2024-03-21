@@ -28,9 +28,9 @@ class LaMaInpainter(LaMa, ImageInpainter):
         device: str = 'cuda',
     ) -> None:
         self.model = torch.jit.load(model_path, 'cpu').eval().to(device)
-        self.mask_expanding_iterations = 10
+        self.mask_expanding_iterations = 20
         self.device = device
-        self.hd_strategy = "Crop"
+        self.hd_strategy = "Resize"
         self.resize_limit = 1280
 
     def __call__(
@@ -54,4 +54,5 @@ class LaMaInpainter(LaMa, ImageInpainter):
         image = np.array(image)
         image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
         mask = expand_mask(mask, self.mask_expanding_iterations)
+        Image.fromarray(mask).save('expand_mask.png')
         return image, mask

@@ -52,13 +52,12 @@ uploadedImage.onchange =  async (e) => {
         const reader = new FileReader();
         reader.onload = (e) => {
             fabric.Image.fromURL(e.target.result, async (img) => {
-                const scale = maxHeight / img.height;
                 img.set({
                     labels: [],
                     uuid: uuidv4(),
                     category: 'base-image',
                     selectable: false,
-                    hoverCursor: "mouse",
+                    hoverCursor: "mouse"
                 });
                 canvas.setWidth(maxHeight * (img.width / img.height));
                 canvas.set({
@@ -82,8 +81,6 @@ addedImage.onchange =  async (e) => {
         const reader = new FileReader();
         reader.onload = (e) => {
             fabric.Image.fromURL(e.target.result, async (img) => {
-                const scale = maxHeight / img.height * 0.7;
-
                 img.set({
                     labels: [],
                     uuid: uuidv4(),
