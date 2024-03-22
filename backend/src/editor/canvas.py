@@ -49,8 +49,7 @@ class Canvas:
     def move(self, graphics: List[Graphic2D], x_offset: int, y_offset: int) -> None:
         self.remove(graphics)
         for g in graphics:
-            g.move((x_offset, y_offset))
-            self.graphics.append(g)
+            self.graphics.append(g.shift((x_offset, y_offset)))
 
     def swap(self, graphic1: Graphic2D, graphic2: Graphic2D) -> None:
         i1 = self.graphics.index(graphic1)

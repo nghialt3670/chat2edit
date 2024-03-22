@@ -16,10 +16,10 @@ class Editor:
 
     def __call__(
         self, 
-        canvas: Canvas,
+        canvases: List[Canvas],
         instruction: str
     ) -> Canvas:
-        prompt = self._create_prompt(instruction, canvas.__class__)
+        prompt = self._create_prompt(instruction, canvases[0].__class__, len(canvases))
         print(prompt)
         program = self.llm(prompt)
         function = self._get_function_string(program)
@@ -30,7 +30,7 @@ class Editor:
         function = self._replace(function, mappings)
         print(function)
         exec(function, globals())
-        return process_image(canvas)
+        return process_image(canvases)
     
     def _get_function_string(self, text: str) -> str:
         if '```' in text:
@@ -38,15 +38,16 @@ class Editor:
         else:
             return text
     
-    def _create_prompt(self, instruction: str, class_obj) -> str:
+    def _create_prompt(self, instruction: str, class_obj, canvases_len: int) -> str:
         prompt = 'Suppose you have this implemeted class:\n'
         prompt += f'class {class_obj.__name__}:\n' 
+
         for declaration in self._get_function_declarations(class_obj):
             prompt += f'\t{declaration}\n'
 
         prompt += f'\nImplement the function below to satisfy the instruction: {instruction}\n'
         prompt += 'Note: Just give the function implementation, dont give explainations or anything else.'
-        prompt += '\ndef process_image(image: Image) -> Image:\n'
+        prompt += f'\ndef process_image({"image: Image" if canvases_len == 0 else "images: List[Image]"}) -> Image:\n'
         prompt += '\t# Your implementation\n'
         mappings = {
             'Canvas': 'Image',

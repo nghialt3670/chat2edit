@@ -1,8 +1,7 @@
-from fastapi import FastAPI, Request, Body
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Body
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Union
 
 from editor.llm import OpenAILLM
@@ -19,8 +18,20 @@ from editor.graphic2d import (
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+
+origins = [
+    "http://localhost:5173",
+]
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
+
 
 
 segmenter = GroundingDINOSAM(
@@ -40,28 +51,15 @@ editor = Editor(
     llm=llm,
 )
 
-
-@app.get("/")
-def read_root(request: Request):
-    return templates.TemplateResponse(
-        "chat.html", {"request": request}
-    )
-
-
 @app.post("/edit")
 async def edit(
     instruction: str,
-    graphics: List[Union[BaseImage, ImageSegment, Text]] = Body(...)
+    graphics_list: List[List[Union[BaseImage, ImageSegment, Text]]] = Body(...)
 ) -> JSONResponse:
-    canvas = Canvas(graphics, segmenter, inpainter)
-    edited_canvas = editor(canvas, instruction)
+    canvases = [Canvas(graphics, segmenter, inpainter) for graphics in graphics_list]
+    edited_canvases = editor(canvases, instruction)
     response = {
-        'graphics': edited_canvas.graphics
+        'graphics_list': [canvas.graphics for canvas in edited_canvases] 
     }
 
     return JSONResponse(content=jsonable_encoder(response))
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)

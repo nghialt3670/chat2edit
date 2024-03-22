@@ -38,7 +38,7 @@ editBtn.onclick = async (e) => {
                 score: obj.score,
                 inpainted: obj.inpainted,
             }
-        }
+        }   
     });
 
     console.log(graphics)
