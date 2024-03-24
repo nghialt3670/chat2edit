@@ -7,6 +7,9 @@ from .inpainting import ImageInpainter
 from .llm import LLM
 from .canvas import Canvas
 
+def process_image():
+    pass
+
 class Editor:
     def __init__(
         self,
@@ -25,11 +28,13 @@ class Editor:
         function = self._get_function_string(program)
         mappings = {
             'Image': 'Canvas',
-            'Entity': 'Graphic2D',
+            'Entity': 'Graphic',
         }
         function = self._replace(function, mappings)
         print(function)
         exec(function, globals())
+        if len(canvases) == 1:
+            return [process_image(canvases[0])]
         return process_image(canvases)
     
     def _get_function_string(self, text: str) -> str:
@@ -43,16 +48,18 @@ class Editor:
         prompt += f'class {class_obj.__name__}:\n' 
 
         for declaration in self._get_function_declarations(class_obj):
-            prompt += f'\t{declaration}\n'
+            if not declaration.startswith('def _'):
+                prompt += f'\t{declaration}\n'
 
         prompt += f'\nImplement the function below to satisfy the instruction: {instruction}\n'
         prompt += 'Note: Just give the function implementation, dont give explainations or anything else.'
-        prompt += f'\ndef process_image({"image: Image" if canvases_len == 0 else "images: List[Image]"}) -> Image:\n'
+        prompt += f'\ndef process_image({"image: Image" if canvases_len == 1 else "images: List[Image]"}) -> Image:\n'
         prompt += '\t# Your implementation\n'
         mappings = {
             'Canvas': 'Image',
-            'Graphic2D': 'Entity',
-            'ImageSegment': 'Entity'
+            'Graphic': 'Entity',
+            'ImageSegment': 'Entity',
+            'graphic': 'entity'
         }
         return self._replace(prompt, mappings)
 

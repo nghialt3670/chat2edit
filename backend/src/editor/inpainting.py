@@ -54,5 +54,4 @@ class LaMaInpainter(LaMa, ImageInpainter):
         image = np.array(image)
         image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
         mask = expand_mask(mask, self.mask_expanding_iterations)
-        Image.fromarray(mask).save('expand_mask.png')
         return image, mask

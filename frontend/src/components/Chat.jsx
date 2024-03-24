@@ -6,7 +6,8 @@ import {
     toBase64Url, 
     objToGraphic, 
     loadFabricImage, 
-    readFilesToBase64Urls 
+    readFilesToBase64Urls,
+    updateCanvas
 }  from './helpers.js';
 
 
@@ -37,10 +38,12 @@ function Chat() {
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
+        document.getElementById('img-input').value = '';
 
         const canvases = [];
         for (const url of base64Urls) {
             const canvas = new fabric.Canvas();
+            canvas.set({uid: uuidv4()})
             const img = await loadFabricImage(url);
             canvas.setHeight(maxHeight)
             canvas.setWidth(maxHeight * (img.width / img.height));
@@ -56,8 +59,12 @@ function Chat() {
         setTextInput('');
         setMessages((prev) => [message, ...prev]);
 
-        const graphics = canvases.map((canvas) => (canvas.getObjects().map(objToGraphic)));
-        const requestBody = JSON.stringify(graphics);
+        const canvases_data = canvases.map((canvas) => ({
+            uid: canvas.uid,
+            graphics: canvas.getObjects().map(objToGraphic)
+        }));
+
+        const requestBody = JSON.stringify(canvases_data);
     
         const request = {
             method: 'POST',
@@ -68,69 +75,29 @@ function Chat() {
         const endpoint = 'http://127.0.0.1:8000/edit';
         const param = new URLSearchParams({instruction: textInput})
         const parameterized_endpoint = endpoint + '?' + param
-    
         const response = await fetch(parameterized_endpoint, request);
         const data = await response.json();
-        console.log(data);
+        const newCanvasesDto = data['canvases'];
+        const newCanvases = []
+        for (let i = 0; i < canvases.length; i++) {
+            const cloneCanvas = async canvas => (
+                new Promise((resolve, reject) => {
+                    canvas.clone(canvas => { resolve(canvas); });
+                })
+            );
+            const clonedCanvas = await cloneCanvas(canvases[i]);
+            const updatedCanvas = await updateCanvas(clonedCanvas, newCanvasesDto[i]);
+            const base_image = updatedCanvas.getObjects()[0];
 
-        const newGraphics = data['graphics'];
-        const oldObjects = canvas.getObjects().map((obj) => obj.toJSON(['uuid', 'category']));
-        const newObjects = newGraphics.map((graphic) => {
-            let attributes = {
-                labels: graphic.labels,
-                uuid: graphic.uuid,
-                category: graphic.category,
-                left: graphic.pos_x,
-                top: graphic.pos_y,
-                angle: graphic.angle,
-                scaleX: graphic.scale_x,
-                scaleY: graphic.scale_y,
-                flipX: graphic.flip_x,
-                flipY: graphic.flip_y,
-                filters: graphic.filters,
-            }
-            if (graphic.category === 'base-image') {
-                attributes = {
-                    ...attributes, 
-                    src: toBase64Url(graphic.base64_str),
-                    selectable: false,
-                    hoverCursor: "mouse"
-                }
-            } else if (graphic.category === 'image-segment') {
-                attributes = {
-                    ...attributes,
-                    src: toBase64Url(graphic.base64_str),
-                    score: graphic.score,
-                    inpainted: graphic.inpainted,
-                }
-            }
-            const idx = oldObjects.findIndex((obj) => {
-                return obj.uuid === graphic.uuid
-            });
-            if (idx != -1) {
-                return { ...oldObjects[idx], ...attributes, };
-            } else {
-                const image = new fabric.Image('');
-                return { ...image.toJSON(), ...attributes };          
-            }
-        });
-    
-        // console.log(newObjects)
-        // console.log(oldObjects)
-    
-        fabric.util.enlivenObjects(newObjects, function(objects) {
-            canvas.renderOnAddRemove = false;
-            canvas.clear();
-    
-            objects.forEach((o, i) => {
-                canvas.insertAt(o, i);
-            });
-          
-            canvas.renderOnAddRemove = true;
-            canvas.renderAll();
-        });
+            updatedCanvas.setHeight(maxHeight)
+            updatedCanvas.setWidth(maxHeight * (base_image.width / base_image.height));
+            updatedCanvas.setZoom(updatedCanvas.height / base_image.height);
+            newCanvases.push(updatedCanvas);
+        }
+        const responseMessage = new Message('left', newCanvases);
+        setMessages((prev) => [responseMessage, ...prev]);
     }
-
+ 
     return (
         <>
             <div id='chat-box'>

@@ -153,6 +153,4 @@ def get_full_mask(mask: np.ndarray, size: Tuple[int, int], offsets: Tuple[int, i
     full_mask[y_offset:y_end, x_offset:x_end] = mask[:y_end-y_offset, :x_end-x_offset]
     mask = mask.astype(np.uint8)
     full_mask = full_mask.astype(np.uint8)
-    Image.fromarray(mask).save('mask.png')
-    Image.fromarray(full_mask).save('full_mask.png')
     return full_mask

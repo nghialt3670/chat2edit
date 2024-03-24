@@ -2,20 +2,16 @@ from fastapi import FastAPI, Body
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Union
+from typing import List
 
 from editor.llm import OpenAILLM
 from editor.inpainting import LaMaInpainter
 from editor.segmentation import GroundingDINOSAM
 from editor.editor import Editor
-from editor.canvas import Canvas
-from editor.graphic2d import (
-    BaseImage,
-    ImageSegment,
-    Text
-)
+from editor.dtos import CanvasDTO
+from editor.mapper import CanvasMapper
 
-
+ 
 app = FastAPI()
 
 
@@ -51,15 +47,17 @@ editor = Editor(
     llm=llm,
 )
 
+
+
 @app.post("/edit")
 async def edit(
     instruction: str,
-    graphics_list: List[List[Union[BaseImage, ImageSegment, Text]]] = Body(...)
+    canvases: List[CanvasDTO] = Body(...)
 ) -> JSONResponse:
-    canvases = [Canvas(graphics, segmenter, inpainter) for graphics in graphics_list]
-    edited_canvases = editor(canvases, instruction)
+    canvases = [CanvasMapper.from_dto(canvas).set_models(segmenter, inpainter) for canvas in canvases]
+    canvases = editor(canvases, instruction)
     response = {
-        'graphics_list': [canvas.graphics for canvas in edited_canvases] 
+        'canvases': [CanvasMapper.to_dto(canvas) for canvas in canvases]
     }
 
     return JSONResponse(content=jsonable_encoder(response))
