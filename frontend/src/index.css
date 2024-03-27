@@ -9,11 +9,20 @@ html, body {
 }
 
 input:focus {
-	outline: none;
+	outline: none
 }
 
 input[type='button'] {
 	cursor: pointer;
+}
+
+input[type='button']:hover {
+	transform: scale(1.1);
+	transition: ease-in-out 0.1s;
+}
+
+button img {
+	height: inherit;
 }
 
 #root {
@@ -29,7 +38,7 @@ input[type='button'] {
     width: clamp(900px, 90%, 1200px);
     height: 90%;
     background-color: #91b6c8;
-    border-radius: 10px;
+    border-radius: 35px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); /* This adds a shadow effect */
 }
 
@@ -52,23 +61,30 @@ input[type='button'] {
 	bottom: 0;
 	width: calc(100% - 20px);
     background-color: #adcbe5;
-	border-radius: 10px;
+	border-radius: 30px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2); /* This adds a shadow effect */ 	
 	margin: 10px;
 	height: auto; 	
 }
 
-#img-preview {
+#img-preview-area {
+	position: relative;
 	display: flex;
 	flex-direction: row;
 	width: fit-content;
 	float: left;
+	overflow-x: scroll
 }
 
-#img-preview img{
-	margin: 5px;
-	width: 100px;
-	opacity: 0.8;
+.img-preview {
+	position: relative;
+}
+
+.img-preview img{
+	margin: 10px;
+	height: 100px;
+	opacity: 0.85;
+	border-radius: 25px;
 }
 
 #input-area {
@@ -79,15 +95,27 @@ input[type='button'] {
 }
 
 #upload-img-btn, #ins-input, #send-msg-btn {
-	border-radius: 10px;
+	border-radius: 25px;
 	border: none;
-	background-color: #69a1c4;
+	background-color: #71acd6;
 }
 
 #upload-img-btn, #send-msg-btn {
 	margin: 10px;
 	height: 40px;
 	width: 60px;
+	background-size: contain; /* or contain or specific dimensions */
+    background-position: center;
+    background-repeat: no-repeat;
+	background-color: transparent;
+}
+
+#upload-img-btn {
+	background-image: url('/src/assets/upload.png');
+}
+
+#send-msg-btn {
+	background-image: url('/src/assets/send.png');
 }
 
 #ins-input {
@@ -103,18 +131,17 @@ input[type='button'] {
 
 .msg {
 	margin: 10px 0px;
-}
+}	
 
 .msg-content img{
-	max-width: 600px;
-	margin: 10px;
-	border-radius: 10px;
+	border-radius: 30px;
+	width: inherit;
+	width: 100%;
 }
 
 .msg-content p {
-	margin: 0px 10px 10px 10px;
+	margin: 0px 0px 0px 20px;
 	font-size: x-large;
-	margin: 10px 15px;
 	height: fit-content;
 	width: fit-content;
 	display: flex;
@@ -122,19 +149,72 @@ input[type='button'] {
 }
 
 .msg-content {
-	background-color: rgba(73, 19, 130, 0.256);
+	position: relative;
+	background-color: rgba(50, 77, 117, 0.256);
 	display: grid;
+	padding: 10px;
+	width: 600px;
 }
 
 .left-msg .msg-content{
 	float: left;
 	left: 0px;
-	border-radius: 0px 15px 15px 15px;
+	border-radius: 0px 35px 35px 35px;
 }
 
 .right-msg .msg-content{
 	float: right;
 	right: 0px;
-	border-radius: 15px 0px 15px 15px;
+	border-radius: 35px 0px 35px 35px;
 }
 
+.del-img-btn {
+	position: absolute;	
+	width: 20px;
+	right: 6px;
+	top: 10px;
+	background-image: url('/src/assets/delete.png');
+	background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+	background-color: transparent;
+	border: none;
+}
+
+.msg-img {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.msg-img-container {
+	padding: 0px;
+}
+
+.nav-to-edit-btn {
+	opacity: 0;
+	position: absolute;
+	background-size: contain; 
+    background-position: center;
+    background-repeat: no-repeat;
+	background-color: transparent;
+	background-image: url('/src/assets/edit-image.png');
+	border: none;
+	width: 30%;
+	height: 30%;
+}
+
+.msg-img img:hover + .nav-to-edit-btn {
+	opacity: 1;
+	transition: ease-in-out 0.3s;
+}
+
+.msg-img:hover {
+	opacity: 0.7;
+	transition: ease-in-out 0.3s;
+}
+
+.nav-to-edit-btn:hover {
+	opacity: 1;
+	transition: ease-in-out 0.3s;
+}
